@@ -17,17 +17,17 @@
 		return false;
 	}
 	
+	//var letters = /[A-Za-z]+/;
 	var strRegExp = /^[0-9\s:\-]+$/;
 	if (strDateTime.match(strRegExp) === null)
     {
 		return false;
 	}
 	
-	var dateResult = new Date(0);
+	var dateResult = new Date();
 
 	var strYear = strDateTime.substr(0,4);
 	var strMonth = strDateTime.substr(5,2);
-
 	var strDay = strDateTime.substr(8,2);
 
 	var nYear = parseInt(strYear);
@@ -52,10 +52,8 @@
 		return false;
 	}
 
-	nMonth = nMonth -1;  // Yes, seriously. setMonth() expects a zero based month count. Javascript authors on drugs?
-	
 	dateResult.setUTCFullYear(nYear);
-	dateResult.setUTCMonth(nMonth); 	
+	dateResult.setUTCMonth(nMonth-1); 	// Yes, seriously. setMonth() expects a zero based month count. Javascript authors on drugs?
 	dateResult.setUTCDate(nDay);
 
 	if (strDateTime.length >= 19)
@@ -64,6 +62,8 @@
 		var strMinute = strDateTime.substr(14,2);
 		var strSecond = strDateTime.substr(17,2);
 
+		//Debug(strYear+'-'+strMonth+'-'+strDay+' '+strHour+':'+strMinute+':'+strSecond);
+		
 		var nHour = parseInt(strHour);
 		if (nHour > 23)
 		{
@@ -93,20 +93,19 @@
 		dateResult.setUTCSeconds(0);
 	}
 	dateResult.setUTCMilliseconds(0);
-	
 	return dateResult.getTime();
 }]]></script>
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2020-02-27 09:14:13</sys_created_on>
         <sys_id>8833cbd81bd38450a89720a8ec4bcb53</sys_id>
-        <sys_mod_count>27</sys_mod_count>
+        <sys_mod_count>20</sys_mod_count>
         <sys_name>ParseDateTime</sys_name>
         <sys_package display_value="DevTools" source="x_snc_devtools">d689f6901bd38450a89720a8ec4bcbfd</sys_package>
         <sys_policy/>
         <sys_scope display_value="DevTools">d689f6901bd38450a89720a8ec4bcbfd</sys_scope>
         <sys_update_name>sys_script_include_8833cbd81bd38450a89720a8ec4bcb53</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2022-03-31 16:19:15</sys_updated_on>
+        <sys_updated_on>2021-03-19 15:32:12</sys_updated_on>
     </sys_script_include>
 </record_update>

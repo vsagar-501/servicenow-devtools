@@ -86,4 +86,5 @@ Confirm the record was successfully inserted</description>
         <value>1</value>
         <variable display_value="Enforce security">e6e3c7535320220002c6435723dc3496</variable>
     </sys_variable_value>
+    <sys_element_mapping action="delete_multiple" query="table=var__m_atf_input_variable_14872288df60220062fe6c7a4df26319^id=ce4f97e9dbc5d010ba15a35305961937"/>
 </record_update>

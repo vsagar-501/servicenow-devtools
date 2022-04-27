@@ -86,4 +86,5 @@ With a failure timeout of 5 Seconds</description>
         <value>records_match_query</value>
         <variable display_value="Assert type">dd091e22675003007ba405225685ef69</variable>
     </sys_variable_value>
+    <sys_element_mapping action="delete_multiple" query="table=var__m_atf_input_variable_0270b8005f30220012b44adb7f46666a^id=1f422ea51b3d9050a89720a8ec4bcb7d"/>
 </record_update>

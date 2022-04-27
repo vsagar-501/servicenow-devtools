@@ -4,7 +4,7 @@
         <client_script/>
         <description/>
         <direct>false</direct>
-        <endpoint>x_snc_devtools_manual.do</endpoint>
+        <endpoint>x_snc_devtools_start.do</endpoint>
         <html><![CDATA[<?xml version="1.0" encoding="utf-8" ?>
 <j:jelly trim="false" xmlns:j="jelly:core" xmlns:g="glide" xmlns:j2="null" xmlns:g2="null">
 <div style="padding-left: 20px;">
@@ -22,503 +22,57 @@
 	<h2>Disclaimer</h2>
 	<g2:no_escape>$[docapi.RenderDisclaimer()]</g2:no_escape>	
 	
-	<p>Some features contained on DevTools and the techniques being used might be considered as a violation of security policies. Please make sure any use is based on conscious choice and careful assessment. This specifically applies to the functions RunScriptInScope() and RunScriptInGlobalScope().</p>
-	
 	<h2>System Requirements</h2>
 	<ul>
-		<g2:no_escape>$[
-			docapi.RenderSystemRequirements(
-				'Quebec,Rome,San Diego',
-				true,
-				AppGetDependencies());
-		]</g2:no_escape>	
+		<li>Orlando, Paris or Quebec</li>
 	</ul>
 	
+	<h2>Security Notice</h2>
+	<p>To leverage the full potential of DevTools functions, some settings need to be changed to allow more cross scope access for scoped apps. This might be considered as a breach of security guidelines and should be validated with those who are responsible for security within the instance!</p>
+		
 	<h2>Installation</h2>
+	<p>To use the full potential of DevTools perform the following steps:</p>
 	<ol>
 		<g2:no_escape>$[
 			docapi.RenderInstallationInstructionsImportFromSourceControl(
 				'DevTools',
 				'https://github.com/saschawildgrube/servicenow-devtools');
 		]</g2:no_escape>
-		<li>Set the system property&#160;<a href="/sys_properties?sys_id=9e52826587120300cf2d5fb736cb0b7f" target="_blank">glide.record.legacy_cross_scope_access_policy_in_script</a>&#160;to "true".</li> 
+		<li>Switch to global scope.</li>
+		<li>Create a new update set in the global scope to capture all changes related to the DevTools installation.</li>
+		<li>Enable create, read, write and delete operations for all applications on the table&#160;<a href="/sys_db_object.do?sys_id=sys_script_include&amp;sysparm_refkey=name" target="_blank">sys_script_include</a>.</li>
 		<g2:no_escape>$[
 			docapi.RenderInstallationInstructionsAppInstall();
 		]</g2:no_escape>		
-		<g2:no_escape>$[
-			docapi.RenderInstallationInstructionsRunTestSuite('4a8550391b5b8850a89720a8ec4bcbd9');
-		]</g2:no_escape>		
-		
-		<!--
-		<li>Go to&#160;<a href="/system_properties_ui.do?sysparm_title=Instance%20Debug%20Options&amp;sysparm_category=devtools.instance.debug" target="_blank">Instance Debug Options</a>&#160;and activate the ATF test execution (if not set already).</li>
+		<li>Set the update set in the global scope to to complete.</li>
+		<li>Go to&#160;"<a href="/system_properties_ui.do?sysparm_title=Instance%20Debug%20Options&amp;sysparm_category=devtools.instance.debug" target="_blank">Instance Debug Options</a>"&#160;and activate the ATF test execution (if not set already).</li>
 		<li>Run the&#160;<a href="/sys_atf_test_suite.do?sys_id=4a8550391b5b8850a89720a8ec4bcbd9&amp;sysparm_view=DevTools&amp;sysparm_view_forced=true" target="_blank">DevTools Test Suite.</a></li>
--->		
 		<li>In case of errors:
 			<ol>
-				<li>In a domain separated instance it may be necessary to switch to the topmost domain to pass all tests.</li>
-				<li>If the test "DevTools - RunScriptInGlobalScope" fails: Retry after a few minutes. Some cross-scrope privileges will be set up during the first test run and might take a few minutes to be effective. The function RunScriptInGlobalScope() is used in many other functions, so do look into any other failed tests as long as this test fails.</li>
-				<li>Tests "DevTools - TestDataAPI": These scripts create various records (e.g. incidents, problems, etc.). If there are customizations in place that make additional fields mandatory, you may have to set up business rules to set these values - but only if the short description (or the corresponding field) starts with "_ATF_".</li>
-				<li>If the "DevTools - Test data sanity" test fails you can use the following script to clear existing test data:</li>
-				<pre>var testdata = new x_snc_devtools.TestDataAPI('_ATF_DEVTOOLS_');
-gs.info('Before DeleteAllData(): '+x_snc_devtools.RenderValue(testdata.GetAllData()));
-testdata.DeleteAllData(testdata.GetAllData());
-gs.info('After DeleteAllData(): '+x_snc_devtools.RenderValue(testdata.GetAllData()));
-				</pre>
+				<li>Tests "DevTools - GetGroupsFromUser" and "DevTools - TestDataAPI": Retry after a few minutes. Some cross-scrope privileges will be set up during the first test run and might take a few minutes to be effective.</li>
+				<li>Test "DevTools - TestDataAPI": This script creates various records (e.g., incidents and problems). If there are customizations in place that make additional fields mandatory, you may have to set up business rules to set these values - but only if the short description (or the corresponding field) starts with "_ATF_".</li>
 			</ol>
 		</li>
 	</ol>
 	
-	<h2>Field Formatting</h2>
-	<p>DevTools can help to format (float) numbers in forms, related lists and list views in the classic UI. Follow these steps to activate the feature:</p>
-	<ol>
-		<li>Set the DevTools system property&#160;<a href="/sys_properties?sys_id=b9fbd89cdb0d8954bcced03cd39619cb" target="_blank">ui.formatting</a>&#160;to "true".</li> 
-		<li>Implement the&#160;<a href="/sys_extension_point.do?sys_id=e3a183be1bae7010edf3642aab4bcbdc" target="_blank">DevTools extension point</a>.</li>
-		<li>Implement the function DevToolsGetFormatConfig using the following template:
-<pre>
-function DevToolsGetFormatConfig(grRecord)
-{
-	var strTable = grRecord.getRecordClassName();
-
-	if (strTable == 'your_table')
-	{
-		var formatconfig = {
-			your_field: {
-				decimals: 2,
-				postfix: ' %'
-			}
-		};
-		return formatconfig;
-	}
-
-	return false;
-}
-</pre>
-		</li>
-		<li>Replace "your_table" by the name of the table that contains the fields to be formatted. Add support for more tables if needed.</li>
-		<li>Replace "your_field" by the name of the field to be formatted. Add more fields if required.</li>
-		<li>"decimals" specifies how many decimals digits should be used after the decimal delimiter.</li>
-		<li>"postfix" specifies a constant string to be added after the formatted number.</li>
-		<li>Note that the function will be called for each individual record, so the formatting can be dependent on other values of the same record.</li>
-		<li>You may consider session or transaction caching techniques to improve performance.</li>
-	</ol>
-	
-	<h2>Service Portal Deactivation</h2>
-	<p>DevTools allows you to deactivate specific Service Portals.</p>
-	<p>A new field "Active" is added to the&#160;<a href="/nav_to.do?uri=sp_portal_list.do%3F" target="_blank">sp_portal</a>&#160;table. Once set to false, the corresponding Service Portal will just disappear and is no longer accessible.</p>
-	
 	<h2>Reference</h2>
 
-	<h3>Configuration Options</h3>
+	<h3>Configuration options</h3>
 	<g2:no_escape>$[docapi.RenderProperties()]</g2:no_escape>
-
-	<h3>UI Actions</h3>
-	<g2:no_escape>$[docapi.RenderUIActions()]</g2:no_escape>		
 	
-	<h3>Script Includes</h3>
+	<h3>Script includes</h3>
 	<g2:no_escape>$[docapi.RenderScriptIncludes()]</g2:no_escape>
-	
-	<h3>UI Scripts</h3>
-	<g2:no_escape>$[docapi.RenderUIScripts()]</g2:no_escape>	
 	
 	<h3>Test step configurations</h3>
 	<p>DevTools contains the following customized test step configurations:</p>
 	<g2:no_escape>$[docapi.RenderTestStepConfigurations()]</g2:no_escape>
-	
-	<h3>Extension Points</h3>
-	<g2:no_escape>$[docapi.RenderExtensionPoints()]</g2:no_escape>		
-
-	<h3>Business Rules</h3>
-	<g2:no_escape>$[docapi.RenderBusinessRules()]</g2:no_escape>	
 	
 	<h2>License</h2>
 	<g2:no_escape>$[docapi.RenderCopyright(2020,'Sascha Wildgrube')]</g2:no_escape>
 	<g2:no_escape>$[docapi.RenderLicense()]</g2:no_escape>
 	
 	<h2>Release Notes</h2>
-<!--
-	<h3>1.3_.0 - 2022-0_</h3>
-	<ol>
-		<li>TODO</li>
-	</ol>
--->
-	<h3>1.37.0 - 2022-04-19</h3> 
-	<ol>
-		<li>Added function GetCountryRecord().</li>
-		<li>Added function StringCheckRegEx().</li>
-		<li>Added UI script function GetIntegerValue().</li>
-		<li>GetParentRecord() and the "Up" UI action now support records related to the Release Management plugin.</li>
-		<li>Added Release Management related tables to the link directory.</li>
-		<li>Added tables sys_ui_policy, sysrule_view to the link directory.</li>
-		<li>WhatRuns() now supports view rules.</li>
-		<li>AppBuilder() now sets the order for the manual ui page correctly behind the menu separator.</li>
-		<li>AppInstall() now disables the specific "Save" UI action on table rm_story if it exists to avoid duplicate buttons.</li> 
-		<li>DocumentationAPI::RenderInstallationInstructionsImportFromSourceControl() now supports the additional parameter bAdditionalSteps to control if the reader should be advised to perform additional steps during installation that are documented for the given app.</li>
-	</ol>
-	
-	<h3>1.36.0 - 2022-04-08</h3>
-	<ol>
-		<li>San Diego is now supported.</li>
-		<li>Added function CreateQRCodeRawData() to generate the raw data for a QRCode.</li>
-		<li>Added function WhatRuns() to identify which business rules run on a table for the different CRUD operations - currently supporting insert, update and query. A corresponding UI action has also been added on forms and lists.</li>
-		<li>Added function HtmlRenderQRCode() to render a QR code as plain vanilla html.</li>
-		<li>Added the ImageAPI class to craft wonderful images and render them as plain html code or bmp files.</li>
-		<li>Added function GetAppRecord() to get a record object of an app either by its Sys ID or its scope name.</li> 
-		<li>Added function HtmlRenderValue() to output any value into an html document.</li>
-		<li>Added function RenderValueHex() to render a value as an hexadecimal string.</li>
-		<li>Added function StringReplace() to replace strings in strings.</li>
-		<li>Added function CreatePDFFromHtml() to render a pdf file based on html and add it as an attachment.</li>
-		<li>Added function RecordAttachmentAdd() to add an attachment to a given record.</li>
-		<li>Added function RecordAttachmentDeleteAll() to delete all attachments of a given record.</li>
-		<li>Added function RecordAttachmentDeleteByFileName() to delete all attachments that match the given file name of a given record.</li>
-		<li>Added function RenderTime() to render a date time value as an UTC ISO string.</li>
-		<li>Added UI script function IsValidSysId() - however the function does not yet support currencies.</li>
-		<li>GetTableFromSysId() is now using cross-scope techniques to identify records in the various tables - avoiding errors caused by cross-scope restrictions.</li>
-		<li>DocumentationAPI::RenderListItem() now checks the text parameter properly and does not show "null" if the text is not provided.</li> 
-		<li>InstallerAPI::SetProperty() now creates a property if it does not exist yet.</li>
-		<li>SetProperty() now supports the bAdd parameter to control if a non-existing system property should be created. New system properties are created in the global scope.</li>
-		<li>AppInstall() now sets the system property "sn_g_app_creator.allow_global" to true to allow users to create global scoped applications.</li>
-		<li>AppInstall() now unhides the "Email" field class so that it can be used by developers.</li>
-		<li>Added tables sys_ux_form_action, sys_ui_page and sys_public to the link directory.</li>
-		<li>Added tables from the "Data Model for Order Management" plugin to the link directory.</li>
-		<li>The test step configuration "DevTools - Check scoped app sanity" now checks for system properties which do not have the scope name as a prefix.</li>
-		<li>Test step configuration "DevTools - Check scoped app sanity" now checks for empty description fields in roles.</li>
-		<li>The manual template used by AppBuilder() is now also including documentation of contained roles.</li>  
-		<li>The "debugrecord" macro is now producing code that works from other scopes, too.</li>
-		<li>The "List" button now saves the current record before navigating to the list view.</li>
-		<li>The "Find Sys ID" UI action now provides feedback if an invalid Sys ID was provided.</li>
-		<li>When using AppBuilder() to built new apps, the bootstrapped manual ui page now also contains instructions to load the app from a source control repository.</li> 
-		<li>The ATF test "DevTools - Implementation" now checks for any UI view that starts with "exp_dtemp" in the DevTools scope explicitly.</li>
-		<li>Refactoring of code to avoid the [0] anti-pattern.</li>
-	</ol>
 
-	
-
-	<h3>1.35.0 - 2022-03-15</h3>
-	<ol>
-		<li>Added security warnings to the manual and the documentation and source code of function RunScriptInScope() and RunScriptInGlobalScope().</li>
-		<li>HtmlRenderLinkDirectory() now supports the title value in the link directory.</li>
-		<li>GetParentRecord() now supports scan_check and its derived record classes.</li>
-		<li>Added tables cmn_location item_option_new, item_option_new_set and sc_item_variables_task to the link directory.</li>
-		<li>Added instance scan related tables to the link directory.</li>
-		<li>Added script editor macro "debugrecord" to add code that renders a record summary into the debug log.</li>
-		<li>More evaluator errors are filtered out in the "Evaluator Log" module which are caused by OOTB components.</li>
-	</ol>
-	
-	
-	<h3>1.34.0 - 2022-02-24</h3>
-	<ol>
-		<li>Added table sys_documentation to the link directory.</li>
-		<li>RunScriptInScope(), IsValidTable(), IsValidColumn(), GetParentTable() and IsUserHasRoleExactly() now use the transaction cache to avoid repetitive database queries.</li>
-		<li>IsUserHasRoleExactly() has been optimized to determine the user role in one query.</li>
-		<li>PerformanceQuery() no longer defaults to the current user of no or an invalid user was specified. In such cases it will return false.</li>
-	</ol>
-
-	<h3>1.33.0 - 2022-02-17</h3>
-	<ol>
-		<li>Added function IsDomainSeparationInstalled() to determine if the domain separation plugin is installed.</li>
-		<li>Function GetArrayValue() now works properly on GlideRecord fields (which are objects of type ScopedGlideElement).</li>
-		<li>Added tables related to "Automated Testing Framework" to the link directory.</li>
-		<li>Added domain separation related tables to the link directory.</li>
-		<li>Added tables related to "Asset Lifecycle Management" to the link directory.</li>
-		<li>The table ast_contract is now under "Contract Management" in the link directory.</li> 
-		<li>The tables sys_app and sys_plugin have been removed and the table sys_package has been added under "Apps" in the link directory.</li>
-		<li>Added tables related to "Customer Service Management" to the link directory.</li>
-		<li>Added tables related to "Product Catalog Management" to the link directory.</li>
-		<li>Added tables related to "Customer Service Install Base Management" to the link directory.</li>
-		<li>Added tables related to "Order Management for Telecommunications" to the link directory.</li>
-		<li>Added catalog_script_client table to the link directory.</li>
-		<li>Business rule "sys_script_client - set table to global" now only acts on Client scripts (and not on derived tables like "Catalog Cliient Scripts")</li>
-		<li>Function IsTableDomainSeparated() no longer requires the sys_domain_path column to be present in a table.</li>
-		<li>Function GetAppName() now also removes a " HOTFIX" postfix.</li>
-		<li>The "Start" page has been renamed to "Manual".</li> 
-		<li>DocumentationAPI::RenderLicense() did not use the application name (was displaying "DevTools" instead). This has been fixed.</li>
-	</ol>
-
-	
-	<h3>1.32.0 - 2022-01-28</h3>
-	<ol>
-		<li>Added tables sys_index, sys_ui_bookmark_group and sys_ui_bookmark to the link directory.</li>
-		<li>GetTableFromSysId() now ignores tables starting with "sn_esign_".</li>
-		<li>The global system property "glide.script.block.client.globals" is now created during installation if it does not exist yet.</li>
-		<li>Test step configuration "DevTools - Check scoped app sanity" now checks for an empty description field in system properties.</li>
-		<li>Test step configuration "DevTools - Check scoped app sanity" no longer objects records in sys_index associated to the app.</li>
-		<li>IsTableDomainSeparated() did not work properly if the domain separation system property does not exist. This has been fixed.</li>
-		<li>The "Create Macro" UI action produced incorrect source code. Syntax editor macros for TimeAddDays(), IsTableDomainSeparated() and AppGetScope() were created incorrectly. This has been fixed.</li> 
-		<li>Added chapter "Service Portal Deactivation" to the documentation.</li>
-	</ol>
-	
-	<h3>1.31.0 - 2022-01-13</h3>
-	<ol>
-		<li>Paris is no longer actively supported.</li>
-		<li>Introduced the Field Formatting Feature to display float values nicely in forms and lists.</li> 
-		<li>Control whether a Service Portal is active by setting the 'Active' flag on records in sp_portal.</li> 
-		<li>Added function TimeAddDays() to add a number of days to a given numeric time value.</li>
-		<li>Added function SetValue() to set a value in a recursive object.</li>
-		<li>Added function ArrayPushUnique() to add a value to an array if it doesn't exist yet.</li>
-		<li>Added function GetAppScope() to get the scope name of an application based on its Sys Id.</li>
-		<li>Added function IsTableDomainSeparated() to check if domain separation is active and supported on a given table.</li>
-		<li>Merge() now also merges arrays including arrays within nested objects.</li>
-		<li>Function GlideRecordInsert() now also supports the ghost mode in which it avoids the execution of business rules during insert.</li> 
-		<li>Added UI Script function ObserveDOM() to attach an oberving callback function to a DOM element.</li>
-		<li>Added UI Script function ServerRequest() to make an Ajax API call to a server-sided script include class.</li>
-		<li>Added UI Script functions Log(), Debug(), GetType(), IsEqual(), IsObject(), IsArray(), ArrayPushUnique(), ArrayValueExists(), GetKeys(), GetArrayValue(), ParseJson(), Merge(), Clone(), GetValue() and SetValue() which are equivalent to their server-sided script include counterparts.</li> 
-		<li>Added method InstallerAPI::ActivateUiPolicy() to set an existing UI Policy active or inactive during installation.</li>
-		<li>RecordBulkProcessor() is now aware of lengthy record processing and multiple scheduled jobs running in parallel.</li>
-		<li>DocumentationAPI::RenderRoles() now renders links to the role record pages.</li>
-		<li>Added business rule "sys_script_client - set table to global" to allow global Client Scripts. OOTB the option of defining global Client Scripts is disabled. This business rule fixes this issue by setting an empty table field to "global".</li>
-		<li>HtmlEncode() now also converts new line characters to line break html tags.</li>
-		<li>Test "DevTools - CurrencyConversion" failed if the instance was set up after september 2021 as ECB exchange rates are not loaded historically. The test now uses the default rate supplied in an OOTB instance.</li>
-		<li>Test step configuration "DevTools - Check scoped app sanity" now checks if a sys_ui_script has a description.</li>
-		<li>Added tables sp_portal, sys_script_client, sys_ui_script and fx_system_rate to the link directory.</li>
-		<li>Link to table sys_app_application in the link directory did not work. This has been fixed.</li>
-		<li>Hardened CurrencyConversion() against invalid parameters.</li>
-		<li>The new form link UI action "Create Macro" on the script include form helps to create a syntax edit macro to access a function or class defined in that script include.</li>  
-		<li>The global "Save" button is now ONE UI Action for both insert and update operations.</li>
-		<li>AppBuilder() had a defect that cause the IsActive() function in the target application not to work correctly. This has been fixed.</li>
-		<li>InstallerAPI.SetProperty() was defective and did not set properties correctly. This has been fixed.</li>
-		<li>The AppInstall() script now also sets the system property "glide.script.block.client.globals" to false to enable global client-sided scripts and hence all client-side DevTools capabilities.</li>
-		<li>Added system property "logging.verbosity" to control DevTools log output. Debug() is now using gs.debug() to produce debug output. AppInstall() sets "logging.verbosity" to "debug" which is the default setting.</li>
-	</ol>
-
-	
-	<h3>1.30.0 - 2021-12-08</h3>
-	<ol>
-		<li>Added function StringPadStart() to compensate the missing Javascript function padStart.</li>
-		<li>Added function RenderDate() to render the given date/time as an UTC iso string.</li>
-		<li>Added function RenderDateTimeUser() to render the given date/time according to the current user's preferences.</li>
-		<li>GetRecord() now checks if the given table actually has the sys_id column and returns false if not.</li>
-		<li>GetTableFromSysId() ran into errors when trying to search fenced tables like sn_hr_* and sn_doc_*. These tables are now ignored.</li>
-		<li>IsUserHasRoleExactly() did not work correctly of no user sys_id was specified (which should imply to assume the current user). This has been fixed.</li>
-	</ol>
-	
-	<h3>1.29.0 - 2021-12-07</h3>
-	<ol>
-		<li>AppBuilder() now creates a manual page based on a template. A perfect start for app documentation.</li>
-		<li>Added function DocumentationAPI::RenderInstanceScanChecks() to document instance scan checks contained in the app.</li>
-		<li>IsValidVersion() now considers version numbers consisting of four components as valid.</li>
-		<li>GlideRecordQuery() does not work on table sys_app_module. A fix is implemented. This has caused the AppBuilder() function to create duplicates of application menu modules.</li>
-		<li>GlideRecordAddQuery() was defective when using an encoded query string. This has been fixed.</li>
-		<li>HtmlRenderLinkDirectory() now supports query, order and order_direction parameters in the link directory.</li>
-		<li>Tables sys_app_module and sys_app_application have been added to the link directory.</li>
-		<li>GetParentRecord() now also supports sys_app_module and sys_choice.</li>
-		<li>Added InstallerAPI::RecordInsertOrUpdate() to add and/or update records during installation in a generic and flexible way.</li>
-		<li>AppBuilder() produced a defective AppInstall() function. When creating the InstallerAPI object, the DevTools scope was missing. This has been fixed.</li> 
-		<li>Removed the "Event" section from the DevTools menu because all relevant links are now contained in the link directory.</li>
-		<li>Removed the outdated security notice from the documentation.</li>
-	</ol>
-	
-	<h3>1.28.1 - 2021-12-02</h3>
-	<ol>
-		<li>Improved the rendering of the link directory.</li>
-		<li>Fixed a defect in AppBuilder() that prevented creating the "Log" module properly.</li>
-	</ol>
-	
-	<h3>1.28.0 - 2021-12-01</h3>
-	<ol>
-		<li>Added function RecordQueryOrInsert() to retrieve a record based on a set of criteria and create the record if it doesn't exist using a set of given values.</li>
-		<li>Added function RecordQuery() to retrieve exactly one record based on the given query object or string. Returns false if no record is found or the criteria identify multiple records.</li>
-		<li>Added function GlideRecordSetValues() to set multiple values on a GlideRecord object at once.</li>
-		<li>Added function CurrencyConversion() to convert a monetary amount from one currency to another.</li>
-		<li>Added function GetFloatValue() to convert a given value into a floating point number.</li>
-		<li>Added GetProperty() to receive the value of a system property using its defined type.</li>
-		<li>Added GetDateNow() to return the current date (UTC) as an ISO-formatted string.</li>
-		<li>Added the global "Save" button and the system property x_snc_devtools.ui.save_button to control its visibility.</li>
-		<li>Function TestDataAPI::GetAllUsers() now also provides the groups of a user.</li>
-		<li>Function TestDataAPI::GetAllGroups() now also provides the users of a group.</li>
-		<li>Added function DocumentationAPI::RenderUIScripts() to auto-document UI scripts contained in an app and added the chapter in the DevTools documentation.</li>
-		<li>Added function TestDataAPI::GetAllConfigurationItems().</li>
-		<li>IsValidSysId() now also supports currency codes as they are used as sys_ids in fx_currency.</li>
-		<li>Test step configuration "DevTools - Check scoped app sanity" now checks if a sys_app_module title matched the sys_name and AppSanity() fixes that in case it is required.</li>
-		<li>Tables sysevent_register, sysevent_email_action, sys_script_email, sys_properties_category, sys_properties_category_m2m, var_dictionary, sys_variable_value, sys_ui_style, sys_dictionary_override, fx_rate, sys_decision, sys_decision_input and sys_decision_question have been added to link directory.</li>
-		<li>GetParentRecord() now also supports sys_ui_style, sys_dictionary_override, fx_rate, sys_decision_input and sys_decision_question.</li>
-		<li>AppBuilder() now also adds a test suite and a module in the application menu.</li>
-		<li>AppBuilder() adds test "Implementation" and "Installation" to the app's test suite.</li>
-		<li>AppBuilder() creates application menu module "Log".</li>
-		<li>Fixed a defect in RedirectToRecord() that should have prevented the function from working at all (which it didn't).</li>
-		<li>RenderValue() no longer produces an error when a JavaObject is used as the parameter. However it cannot render it properly.</li>
-		<li>Removed Debug*() and Log() functions from TransactionCacheAPI and TestDataAPI classes.</li>
-	</ol>	
-	
-	<h3>1.27.1 - 2021-11-19</h3>
-	<ol>
-		<li>A defect prevented the "Find Sys ID" UI action to be visible. This has been fixed.</li>
-	</ol>
-	
-	<h3>1.27.0 - 2021-11-18</h3>
-	<ol>
-		<li>Added function RedirectToRecord() to redirect the user agent to the given record.</li>
-		<li>Added function ParseCsv() to convert a string containing csv formatted data into an array of objects representing the data rows.</li>
-		<li>HttpRequest() now supports headers and sending a request body.</li>
-		<li>Test step config "DevTools - App sanity" now checks if test steps' copied_from fields are empty.</li>
-		<li>AppSanity() function now also accepts a scope name.</li>
-		<li>AppSanity() now also clears all test steps' copied_from fields.</li>
-		<li>GetParentRecord() now supports sys_ui_policy_rl_action, sys_ui_policy_action, sys_ui_policy, sys_ui_section, sys_ui_element, sys_ui_list and sys_ui_list_element.</li>
-		<li>Added cmdb_rel_type, sys_ui_policy_rl_action, sys_ui_policy_action, sys_ui_policy, fx_currency, sys_glide_object, sys_ui_section, sys_ui_element, sys_ui_list and sys_ui_list_element to GetLinkDirectory().</li>
-		<li>AppBuilder() creates the script include for the AppInstall() function.</li>
-		<li>AppBuilder() creates the "active" system property.</li>
-		<li>AppBuilder() creates the "log.active" system property und the Log() function respects if the property is set to true.</li>
-		<li>AppBuilder() creates the script include for the IsActive() function.</li>
-		<li>AppBuilder() creates the script include for the AppGetProperty() function.</li>
-		<li>HtmlRenderLinkDirectory() now also renders links specified directly using a url.</li>
-		<li>TestDataAPI::CreateRequestTask() now uses the third paramter as the opened_by user instead of the assigned_to user for consistency.</li>
-		<li>Added function InstallerAPI::ShowFieldClass() to show or hide a field class during installation.</li>
-		<li>GetTableFromSysId() has been improved significantly. Various tables are excluded and tables are searched in a way that makes it more probably that records are found faster.</li>
-		<li>AppInstall() now unhides the "UI Action List" field class so that it can be used by developers.</li>
-	</ol>
-	
-	
-	<h3>1.26.0 - 2021-11-10</h3>
-	<ol>
-		<li>Added the new "Links" page with the new link directory with many useful links for admins and developers. The new function GetLinkDirectory() returns the standard DevTools link directory. The directory can be extended using the DevTools extension point.</li>
-		<li>Removed the "Access Control" sub menu and the "Cross Scope Privileges" module.</li>
-		<li>Added function RecordInsert() to add a new record into a table with a given set of values.</li>
-		<li>Added function RecordGetSummary() to render a short hand summary of a record for debugging.</li>
-		<li>Added function IsExistingRecord() to check if a given GlideRecord object represents an existing record.</li>
-		<li>Added functions TestAPI::Get*() to get the Sys ID of the corresponding test data item.</li>
-		<li>Added function TestAPI::TestCase_GetRecord() to check if a record exists.</li>
-		<li>Added function TestAPI::TestCase_RecordGetValue() to check the value of a field in a given record.</li>
-		<li>Added function TestAPI::TestCase_IsRecordAccessibleByUser() to check if a given user has access to a given record.</li>
-		<li>Added function GetInstanceListPath() to generate the path component to access a list view.</li>
-		<li>Added function HtmlRenderLink() to render the html for a link.</li>
-		<li>Added function IsUserAdmin() to check if the current or a given user has the admin role.</li>
-		<li>Added function GetShortUniqueString() to render unique strings and avoid naming collisions.</li>
-		<li>Added function ParseURL() to return the components of a url in an object.</li>
-		<li>Added function ParseUrlParameters() to return the key value pairs of a url parameter string in an object.</li>
-		<li>Added method InstallerAPI::ActivateUiAction() to set an existing UI Action active or inactive during installation.</li>
-		<li>Added support for core_comapany and ast_contract in TestDataAPI class.</li>
-		<li>Added function GetRoleNamesFromUser() to get the names of the active roles of a user.</li>
-		<li>Functions IsUserSecurityAdmin() and IsUserHasRoleExactly() now support a parameter to specify a user to check.</li>
-		<li>The new UI Action "Find Sys ID" asks the user for a sys id and then redirects the browser to the record form page. That's a real killer feature!</li>
-		<li>The new UI Action "Execute Now" replaces the OOTB "Execute Now" UI Action on sysauto_script. It triggers the execution, stays on the current form and displays a message that the job has been triggered for execution.</li> 
-		<li>AppInstall() now deactivates the OOTB UI action "Execute Now" on sysauto_script.</li>
-
-		<li>TestAPI::TestCase() now uses strict comparison ("===") when comparing the expected value with the result. Affected tests have been adapted accordingly.</li>
-		<li>GetTableFromSysId() now checks if the sys_id field exists before trying to find the record - thus making the process faster and more robust.</li>
-		<li>GetTableFromSysId() checks the sys_package, domain, core_company and ast_contract tables first to cover more of the more likely use cases without doing the full scan through all tables.</li>
-		<li>IsTechnicalUser() now checks parameters against invalid and empty values and returns false if there are multiple technical users sharing the same user_name.</li>
-		<li>GetParentRecord() now supports sys_storage_alias.</li>
-		<li>AppBuilder() now also creates the script include for the AppSetDefaults() function.</li>
-		<li>AppBuilder() now checks if an application menu already exists.</li>
-		<li>AppBuilder() now creates the extention point instance for the DevTools extension point and the corresponding script includes.</li>
-		<li>Updated example script for the DevTools extension point.</li>
-		<li>The "List" button now keeps the filter of the list view from which the current record form was navigated.</li>
-		<li>The "Delete Update Set" button is now active by default.</li>
-		<li>Sleep() is now accessible to all application scopes.</li>
-		<li>Renamed function DeleteUpdateSet() to UpdateSetDelete() and made it accessible to all scopes.</li>
-		<li>The test step config "DevTools - Check scoped app sanity" now checks if active UI actions have a description (a non-empty comments field).</li>
-	</ol>
-	
-	<h3>1.25.0 - 2021-10-11</h3>
-	<ol>
-		<li>RunScriptInGlobalScope() and the new RunScriptInScope() functions no longer require configuration changes on the sys_script_include table. If DevTools has been installed in the past you may use the following script to revert the modified configuration back to OOTB:<pre>var grRecord = new GlideRecord('sys_db_object');
-grRecord.addQuery('name','=','sys_script_include');
-grRecord.query();
-if (grRecord.next())
-{
-   grRecord.access = '';
-   grRecord.read_access = 'true';
-   grRecord.create_access = 'false';
-   grRecord.update_access = 'false';
-   grRecord.delete_access = 'false';
-   grRecord.update();
-}
-gs.invalidateCache();
-</pre>
-		</li>
-		<li>Added function GetTableFromSysId() to identify the table of the record identified by the given sys_id.</li>
-		<li>Added function ArrayAppend() to append an array to another and make sure return value is always an array.</li>
-		<li>Added function DatabaseIndexCreate() to add a new database index.</li>
-		<li>Added function GetParentTable() to return the name of the super class of a given table.</li> 
-		<li>Added function IsValidColumn() to check if a given column exists in a table (or its parent tables).</li>
-		<li>Added function IsValidFunction() to check if the given value is a callable function.</li>
-		<li>Added function RecordGetValue() to get a single value from a given record.</li>
-		<li>RecordSetValue(), GlideRecordUpdate() and RecordBulkProcessor() now support the ghost parameter which (if set to true) uses setWorkflow(false) and autoSysFields(false) to supress business rules, auditing and sys field updates.</li>
-		<li>RecordBulkProcessor() now effectively detects if the same record is found again and again to prevent an endless loop. If a business rule prevents the update of a record and the ghost mode is not set, the function returns immediately.</li>
-		<li>Added function TableSetAttribute() to set an attribute of a table to a given value.</li>
-		<li>Added method InstallerAPI::SetTableAttribute().</li>
-		<li>Added method InstallerAPI::ActivateBusinessRule().</li>
-		<li>Added method InstallerAPI::ActivateClientScript().</li>
-		<li>Added function DeleteUpdateSet() function and the "Delete Update Set" UI action. A system property controls if the button is available to admin users.</li>
-		<li>The DevTools AppInstall() function now sets the update_synch attribute of the sysauto_script table to true to make sure that scheduled jobs are captured in update sets and committed to source control.</li>
-		<li>AppInstall() now enables the creation of cross-scope before query business rules by deactivating a business rule and two client scripts.</li>
-		<li>AppInstall() modifies the UI action "Execute Now" on sysauto to stay on the current form.</li>
-		<li>The function TestAPI::TestCase() now displays the milliseconds required to run the given function.</li>
-		<li>Test "DevTools - RunScriptInGlobalScope - Temporary script includes" was flaky due to race conditions during test executions. Added a threshold of 30 minutes so the test will only alert on left over script includes created more than 30 minutes ago.</li>
-		<li>Test "DevTools - Installation" now checks if the sysauto_script table is configured so that records are captured in update sets and committed to source control.</li>
-		<li>Test step configuration "DevTools - Check scoped app sanity" now checks for unwanted entries in sys_index associated with the app.</li>
-		<li>Test step configuration "DevTools - Check scoped app sanity" now checks for test suite tests where the scope of the record does not match the scope of the associated test suite.</li>
-		<li>Added the business rule "sys_atf_test_suite_test - match scopes" to make sure a test suite test is using the same scope as the associated suite.</li>
-		<li>GetParentRecord() is now more effectively checking for the suite most relevant to a test by considering the scope of the test_suite, too.</li>
-		<li>GetParentRecord() now supports records in tables sys_update_xml, sys_update_set, sys_extension_instance, sys_ux_list, sys_ux_list_category, ts_table, sys_documentation (field labels) and sys_dictionary (table columns).</li>
-		<li>GetRecord() now checks if the given sys_id is valid, hence avoiding unnecessary queries.</li>
-		<li>GetRecord() now tries to get a record from within the scope instead of using GlideRecordQuery() and hence RunScriptInGlobalScope() in all cases.</li>
-		<li>GetRecord() now supports a third parameter: bNoCrossScope. If set to true, GetRecord() will not try to load a record from the global scope if it cannot be loaded from DevTools' scope.</li>
-		<li>IsValidSysId() now confirms that "global" is a valid sys id.</li>
-		<li>AppBuilder() now also accepts a scope name as the parameter.</li>
-	</ol>
-	
-	<h3>1.24.0 - 2021-09-22</h3>
-	<ol>
-		<li>DevTools has been tested with Rome Release.</li>
-		<li>RunScriptInGlobalScope() now supports seven input parameters.</li>
-		<li>GetParentRecord() now also supports sys_aw_list and sys_aw_list_category.</li>
-		<li>GetParentRecord() now checks if the GetParentRecord function in the called extension point really exists.</li>
-		<li>Added function DocumentationAPI::RenderInstallationInstructionsRunTestSuite() to render instructions on how to enable ATF tests and run the app's test suite.</li>
-		<li>Added function InstallerAPI::DeleteView() to delete views which (due to a platform defect) reappear after installation.</li>
-		<li>Added a test to verify there are no temporary script includes left over by RunScriptInGlobalScope().</li>
-	</ol>
-
-	
-	<h3>1.23.0 - 2021-09-16</h3>
-	<ol>
-		<li>Orlando is no longer actively supported.</li>
-		<li>GetParentRecord() now supports sys_atf_test_suite, incident_task, change_task, problem_task, sc_task, sc_req_item, sys_db_view_table and sys_db_view_table_field records.</li>
-		<li>GetParentRecord() now supports tests which are part of multiple test suites if there is exactly one suite in the same scope.</li>
-		<li>Introduced the DevTools extension point - to extend the GetParentRecord() function.</li>
-		<li>Added DocumentationAPI::RenderExtensionPoint() function.</li>
-		<li>AppBuilder() now also adds the AppSetProperty function.</li>
-		<li>Fixed a defect in test step configuration "DevTools - Check scoped app sanity".</li>
-		<li>Fixed a defect in AppSanity() when removing the snc_internal role from an ACL.</li>
-		<li>Removed view "DevTools Install" as it was no longer needed.</li>
-	</ol>
-	
-	<h3>1.22.0 - 2021-09-09</h3>
-	<ol>	
-		<li>When using the "Run Test" button on a test step form, the UI action will first check if there are unsaved changes and save the test step record instead of running the test.</li> 
-		<li>Introduced class TestAPI to support scripted tests by managing log output, result state and various generic test case functions.</li>
-		<li>Introduced class InstallerAPI to support scripted installation steps (and refactored AppInstall() to use the new class).</li>
-		<li>Added test step configuration "DevTools - Check test data sanity" to check if there is any test data left over with a given prefix.</li>
-		<li>TestDataAPI now also supports sc_req_item and sc_task.</li>
-		<li>Added function AppBuilder() to help building robust scoped apps.</li>
-		<li>Added function AppBuilderAddTestToSuite() to add an ATF test to an existing ATF test suite.</li>
-		<li>Added UI action "Add Test" to add a test to a suite in one click.</li>
-		<li>Added UI action "Up" to navigate to a record's parent record if possible.</li>
-		<li>The new function GetParentRecord() delivers a record's parent record if supported.</li>
-		<li>Added function RenderSystemRequirements() to DocumentationAPI to automatically render system requirements including dependencies to other apps.</li>
-		<li>Added function RenderInstallationInstructionsConfigureTableCrossScopeAccess() to DocumentationAPI.</li>
-		<li>Added function RenderInstallationInstructionsBackgroundScript() to DocumentationAPI.</li>
-		<li>Added function RenderUIActions() to DocumentationAPI.</li>
-		<li>Added function RenderBusinessRules() to DocumentationAPI.</li>
-		<li>Added function GetInstanceRecordPath(), GetInstanceRecordURL() and GetInstanceRecordURI() to produce different variants of a deep link to a specific record in the instance.</li>
-		<li>AppSanity() now removes the snc_internal role from ACLs if there is at least one other role required for the ACL.</li>
-		<li>AppGetName() now returns false instead of "undefined" if the app cannot be found.</li>
-		<li>The test step config "DevTools - Check scoped app sanity" checks for unintended configuration of the role snc_internal in ACLs.</li>
-		<li>Added business rule "sys_ui_action - set table to global" to allow global UI Actions. In a recent family release (Quebec?) the option of defining global UI Actions has been removed as the table field no longer allows to set the value to "global". This business rule fixes this issue by setting an empty table field to "global".</li> 
-		<li>RenderValue() now supports the bUnsortedKeys parameter to avoid sorting object keys.</li>
-		<li>Introduced the function GetAppDependencies() to retrieve information about an app's dependencies to other apps.</li>
-	</ol>
-	
-	<h3>1.21.0 - 2021-08-23</h3>
-	<ol>
-		<li>Added function GetUserRecord() to get a user's GlideRecord object based on a sys_id, user_name or email.</li>
-		<li>Added function PerformanceQuery() to measure query performance given a table, query string, a user, the number of repetitions and a limit of records to be returned. The function will provide the milliseconds of the fastest and slowest repetition, the average speed and the number of records returned.</li> 
-		<li>Added function PerformanceQueryMultiple() to execute multiple performance tests on a number of queries combined with a number of users in one go.</li>
-		<li>TestDataAPI.CreateUser() can now set the user's email.</li>
-		<li>RecordBulkProcess() now handles empty tables properly and stops immediately.</li>
-		<li>AppInstall() is now accessible from all scopes. This enables other installation scripts in other scoped Apps to run the function as part of their own installation procedure.</li>
-		<li>Extended the installation guide to run a background script to configure cross scope access to the sys_script_include table.</li>
-	</ol>
-	
 	<h3>1.20.0 - 2021-07-06</h3>
 	<ol>
 		<li>AppSanity() now sets is_private to false for system properties.</li>
@@ -788,19 +342,19 @@ gs.invalidateCache();
 <span style="visibility: hidden;">_CUT_HERE_</span>
 </div>
 </j:jelly>]]></html>
-        <name>manual</name>
+        <name>start</name>
         <processing_script/>
         <sys_class_name>sys_ui_page</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2020-02-27 11:17:42</sys_created_on>
         <sys_id>e44fd7541b578450a89720a8ec4bcb8c</sys_id>
-        <sys_mod_count>788</sys_mod_count>
-        <sys_name>manual</sys_name>
+        <sys_mod_count>386</sys_mod_count>
+        <sys_name>start</sys_name>
         <sys_package display_value="DevTools" source="x_snc_devtools">d689f6901bd38450a89720a8ec4bcbfd</sys_package>
         <sys_policy/>
         <sys_scope display_value="DevTools">d689f6901bd38450a89720a8ec4bcbfd</sys_scope>
         <sys_update_name>sys_ui_page_e44fd7541b578450a89720a8ec4bcb8c</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2022-04-19 17:48:50</sys_updated_on>
+        <sys_updated_on>2021-07-06 11:30:07</sys_updated_on>
     </sys_ui_page>
 </record_update>

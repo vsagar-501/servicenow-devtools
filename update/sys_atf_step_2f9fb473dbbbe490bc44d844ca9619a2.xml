@@ -87,4 +87,5 @@ Confirm the record was successfully inserted</description>
         <value>name=_ATF_DEVTOOLS_ITEM_1^value=Hello World^EQ</value>
         <variable display_value="Field values">dd54cf535320220002c6435723dc34fd</variable>
     </sys_variable_value>
+    <sys_element_mapping action="delete_multiple" query="table=var__m_atf_input_variable_14872288df60220062fe6c7a4df26319^id=2f9fb473dbbbe490bc44d844ca9619a2"/>
 </record_update>
